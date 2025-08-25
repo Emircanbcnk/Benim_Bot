@@ -3068,6 +3068,9 @@ async def signal_processing_loop():
                     if "min_price" not in active_signals[symbol] or last_price < active_signals[symbol]["min_price"]:
                         active_signals[symbol]["min_price"] = last_price
                     
+                    # Aktif sinyalleri veritabanına kaydet
+                    save_active_signals_to_db(active_signals)
+                    
                     # Hedef ve stop kontrolü
                     entry_price = active_signals[symbol]["entry_price_float"]
                     target_price = float(active_signals[symbol]["target_price"].replace('$', '').replace(',', ''))
@@ -3644,8 +3647,8 @@ async def monitor_signals():
                             if "min_price" not in active_signals[symbol] or final_price < active_signals[symbol]["min_price"]:
                                 active_signals[symbol]["min_price"] = final_price
                             
-                            # DB'ye anlık fiyatı kaydetmek için (opsiyonel ama iyi bir pratik)
-                            save_data_to_db(f"active_signal_{symbol}", active_signals[symbol])
+                            # Aktif sinyalleri veritabanına kaydet
+                            save_active_signals_to_db(active_signals)
                         else:
                             # Tetikleme yoksa pozisyon hala aktif
                             print(f"🔍 {symbol} - Mum verisi ile pozisyon hala aktif")
