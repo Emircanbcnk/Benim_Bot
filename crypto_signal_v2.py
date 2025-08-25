@@ -1452,7 +1452,7 @@ async def stats_command(update, context):
                 signal_type = signal.get('type', 'ALIŞ')
                 type_emoji = "🟢" if signal_type == "ALIŞ" else "🔴"
                 
-                detailed_signals_text += f"{change_emoji} {symbol} ({signal_type}): Giriş: ${entry_price:.6f} → Güncel: ${current_price:.6f} ({change_text}){max_min_text}\n"
+                detailed_signals_text += f"{change_emoji} {symbol} ({signal_type}):\nGiriş: ${entry_price:.6f}\nGüncel: ${current_price:.6f}\nDurum: ({change_text}){max_min_text}\n\n"
                 
             except Exception as e:
                 print(f"❌ {symbol} sinyal detayı hesaplanamadı: {e}")
