@@ -1415,7 +1415,14 @@ async def stats_command(update, context):
                 
                 # Yüzde değişimi hesapla
                 if entry_price > 0:
-                    percent_change = ((current_price - entry_price) / entry_price) * 100
+                    signal_type = signal.get('type', 'ALIŞ')
+                    if signal_type == "SATIŞ" or signal_type == "SATIS":
+                        # SATIŞ sinyali için: Fiyat düşerse kar, yükselirse zarar
+                        percent_change = ((entry_price - current_price) / entry_price) * 100
+                    else:
+                        # ALIŞ sinyali için: Fiyat yükselirse kar, düşerse zarar
+                        percent_change = ((current_price - entry_price) / entry_price) * 100
+                    
                     change_emoji = "🟢" if percent_change >= 0 else "🔴"
                     change_text = f"{percent_change:+.2f}%"
                 else:
@@ -1427,8 +1434,16 @@ async def stats_command(update, context):
                 min_price = signal.get('min_price', 0)
                 
                 if max_price and min_price:
-                    max_percent = ((float(str(max_price).replace('$', '').replace(',', '')) - entry_price) / entry_price) * 100
-                    min_percent = ((float(str(min_price).replace('$', '').replace(',', '')) - entry_price) / entry_price) * 100
+                    signal_type = signal.get('type', 'ALIŞ')
+                    if signal_type == "SATIŞ" or signal_type == "SATIS":
+                        # SATIŞ sinyali için max/min hesaplama
+                        max_percent = ((entry_price - float(str(max_price).replace('$', '').replace(',', ''))) / entry_price) * 100
+                        min_percent = ((entry_price - float(str(min_price).replace('$', '').replace(',', ''))) / entry_price) * 100
+                    else:
+                        # ALIŞ sinyali için max/min hesaplama
+                        max_percent = ((float(str(max_price).replace('$', '').replace(',', '')) - entry_price) / entry_price) * 100
+                        min_percent = ((float(str(min_price).replace('$', '').replace(',', '')) - entry_price) / entry_price) * 100
+                    
                     max_min_text = f" MAX: ({max_percent:+.2f}%) / MİN: ({min_percent:+.2f}%)"
                 else:
                     max_min_text = ""
