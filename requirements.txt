@@ -1,7 +1,9 @@
 python-telegram-bot==20.7
-python-dotenv==1.0.0
-python-binance==1.0.19
 pandas==2.1.4
-ta==0.10.2
-pymongo==4.6.1
+numpy==1.24.3
+requests==2.31.0
+pymongo==4.6.0
+python-dotenv==1.0.0
+asyncio
 aiohttp==3.9.1
+websockets==12.0

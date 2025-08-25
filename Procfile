@@ -1,1 +1,1 @@
-worker: python crypto_signal_v2.py 
+web: python crypto_signal_v2.py 
