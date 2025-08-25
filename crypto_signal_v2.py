@@ -9,6 +9,7 @@ import telegram
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 import json
 import aiohttp
+from aiohttp import web
 from dotenv import load_dotenv
 import os
 from pymongo import MongoClient
@@ -3545,6 +3546,25 @@ async def monitor_signals():
             await asyncio.sleep(10)  # MONITOR_SLEEP_ERROR - Hata durumunda bekle
             active_signals = load_active_signals_from_db()
 
+async def web_server():
+    """Render için basit web sunucusu"""
+    app = web.Application()
+    
+    async def health_check(request):
+        return web.Response(text="Bot is running!", content_type='text/plain')
+    
+    app.router.add_get('/', health_check)
+    app.router.add_get('/health', health_check)
+    
+    port = int(os.environ.get('PORT', 8000))
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, '0.0.0.0', port)
+    await site.start()
+    print(f"🌐 Web sunucusu port {port}'de başlatıldı")
+    
+    return runner
+
 async def main():
     load_allowed_users()
     await setup_bot()
@@ -3560,6 +3580,9 @@ async def main():
         await asyncio.sleep(2)  # Biraz bekle
     except Exception as e:
         print(f"Webhook temizleme hatası: {e}")
+    
+    # Web sunucusunu başlat
+    web_runner = await web_server()
     
     # Bot polling'i başlat
     try:
@@ -3600,6 +3623,10 @@ async def main():
             print("✅ Telegram uygulaması kapatıldı")
         except Exception as e:
             print(f"⚠️ Uygulama kapatma hatası: {e}")
+        
+        # Web sunucusunu kapat
+        await web_runner.cleanup()
+        print("✅ Web sunucusu kapatıldı")
         
         close_mongodb()
         print("✅ MongoDB bağlantısı kapatıldı")
