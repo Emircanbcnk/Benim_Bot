@@ -1168,7 +1168,7 @@ async def send_telegram_message(message, chat_id=None):
             data = {
                 'chat_id': chat_id,
                 'text': message,
-                'parse_mode': 'HTML',
+                'parse_mode': 'Markdown',
                 'disable_web_page_preview': True
             }
             
@@ -1315,19 +1315,17 @@ async def test_command(update, context):
 ⚡ Kaldıraç: 10x
 📊 24h Hacim: $2.5B
 
-🎯 <b>HEDEF FİYATLAR:</b>
+🎯 **HEDEF FİYATLAR:**
 • Hedef 1 (%1): $45,450.00
 • Hedef 2 (%2): $45,900.00
 • Hedef 3 (%3): $46,350.00
 
-🛑 <b>STOP LOSS:</b>
+🛑 **STOP LOSS:**
 • SL 1: $45,227.25
 • SL 2: $45,670.50
 • SL 3: $46,113.75
 
-
-
-⚠️ <b>Bu bir test sinyalidir!</b> ⚠️"""
+⚠️ **Bu bir test sinyalidir!** ⚠️"""
     
     await update.message.reply_text("🧪 Test sinyali gönderiliyor...")    
     await send_signal_to_all_users(test_message)
