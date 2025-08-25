@@ -7,3 +7,4 @@ python-dotenv
 aiohttp
 websockets
 ta
+python-binance
