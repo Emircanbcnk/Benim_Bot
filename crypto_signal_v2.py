@@ -16,6 +16,7 @@ from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
 from decimal import Decimal, ROUND_DOWN, getcontext
 from binance.client import Client
+import re
 
 load_dotenv()
 
@@ -100,7 +101,19 @@ def validate_user_id(user_id_str):
 
 async def send_command_response(update, message, parse_mode='Markdown'):
     """Komut yanıtını gönderir"""
-    await update.message.reply_text(message, parse_mode=parse_mode)
+    try:
+        await update.message.reply_text(message, parse_mode=parse_mode)
+    except Exception as e:
+        print(f"❌ Markdown formatında gönderilemedi: {e}")
+        # HTML formatında dene
+        try:
+            # Markdown'ı HTML'e dönüştür
+            html_message = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', message)
+            await update.message.reply_text(html_message, parse_mode='HTML')
+        except Exception as e2:
+            print(f"❌ HTML formatında da gönderilemedi: {e2}")
+            # Son çare olarak düz metin olarak gönder
+            await update.message.reply_text(message, parse_mode=None)
 
 async def api_request_with_retry(session, url, ssl=False, max_retries=None):
     if max_retries is None:
@@ -1298,7 +1311,25 @@ async def help_command(update, context):
             await update.message.delete()
     except Exception as e:
         print(f"❌ Özel mesaj gönderilemedi ({user_id}): {e}")
-        await update.message.reply_text(help_text, parse_mode='Markdown')
+        # Markdown hatası durumunda HTML formatında dene
+        try:
+            # HTML formatına çevir - Markdown'ı HTML'e dönüştür
+            html_text = help_text
+            # **text** -> <b>text</b> dönüşümü
+            html_text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', html_text)
+            await context.bot.send_message(
+                chat_id=user_id,
+                text=html_text,
+                parse_mode='HTML'
+            )
+        except Exception as e2:
+            print(f"❌ HTML formatında da gönderilemedi ({user_id}): {e2}")
+            # Son çare olarak düz metin olarak gönder
+            await context.bot.send_message(
+                chat_id=user_id,
+                text=help_text,
+                parse_mode=None
+            )
 
 async def test_command(update, context):
     if not update.effective_user:
@@ -1357,6 +1388,8 @@ async def stats_command(update, context):
         
         status_emoji = "🟢"
         status_text = "Aktif (Sinyal Arama Çalışıyor)"
+        # Markdown formatını güvenli hale getir
+        safe_status_text = status_text.replace('*', '\\*').replace('_', '\\_').replace('`', '\\`')
         stats_text = f"""📊 **Bot İstatistikleri:**
 
 📈 **Genel Durum:**
@@ -1371,9 +1404,21 @@ async def stats_command(update, context):
 • Başarı Oranı: %{success_rate:.1f}
 
 🕒 **Son Güncelleme:** {datetime.now().strftime('%H:%M:%S')}
-{status_emoji} **Bot Durumu:** {status_text}"""
+{status_emoji} **Bot Durumu:** {safe_status_text}"""
     
-    await update.message.reply_text(stats_text, parse_mode='Markdown')
+    try:
+        await update.message.reply_text(stats_text, parse_mode='Markdown')
+    except Exception as e:
+        print(f"❌ Markdown formatında gönderilemedi: {e}")
+        # HTML formatında dene
+        try:
+            # Markdown'ı HTML'e dönüştür
+            html_stats_text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', stats_text)
+            await update.message.reply_text(html_stats_text, parse_mode='HTML')
+        except Exception as e2:
+            print(f"❌ HTML formatında da gönderilemedi: {e2}")
+            # Son çare olarak düz metin olarak gönder
+            await update.message.reply_text(stats_text, parse_mode=None)
 
 async def active_command(update, context):
     """Aktif sinyaller komutu"""
@@ -1391,17 +1436,39 @@ async def active_command(update, context):
     else:
         active_text = "📈 **Aktif Sinyaller:**\n\n"
         for symbol, signal in active_signals.items():
-            active_text += f"""🔹 **{symbol}** ({signal['type']})
-• Giriş: {signal['entry_price']}
-• Hedef: {signal['target_price']}
-• Stop: {signal['stop_loss']}
-• Şu anki: {signal['current_price']}
-• Kaldıraç: {signal['leverage']}x
-• Sinyal: {signal['signal_time']}
+            # Markdown formatını güvenli hale getir
+            safe_symbol = str(symbol).replace('*', '\\*').replace('_', '\\_').replace('`', '\\`')
+            safe_type = str(signal['type']).replace('*', '\\*').replace('_', '\\_').replace('`', '\\`')
+            safe_entry = str(signal['entry_price']).replace('*', '\\*').replace('_', '\\_').replace('`', '\\`')
+            safe_target = str(signal['target_price']).replace('*', '\\*').replace('_', '\\_').replace('`', '\\`')
+            safe_stop = str(signal['stop_loss']).replace('*', '\\*').replace('_', '\\_').replace('`', '\\`')
+            safe_current = str(signal['current_price']).replace('*', '\\*').replace('_', '\\_').replace('`', '\\`')
+            safe_leverage = str(signal['leverage']).replace('*', '\\*').replace('_', '\\_').replace('`', '\\`')
+            safe_time = str(signal['signal_time']).replace('*', '\\*').replace('_', '\\_').replace('`', '\\`')
+            
+            active_text += f"""🔹 **{safe_symbol}** ({safe_type})
+• Giriş: {safe_entry}
+• Hedef: {safe_target}
+• Stop: {safe_stop}
+• Şu anki: {safe_current}
+• Kaldıraç: {safe_leverage}x
+• Sinyal: {safe_time}
 
 """
     
-    await update.message.reply_text(active_text, parse_mode='Markdown')
+    try:
+        await update.message.reply_text(active_text, parse_mode='Markdown')
+    except Exception as e:
+        print(f"❌ Markdown formatında gönderilemedi: {e}")
+        # HTML formatında dene
+        try:
+            # Markdown'ı HTML'e dönüştür
+            html_active_text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', active_text)
+            await update.message.reply_text(html_active_text, parse_mode='HTML')
+        except Exception as e2:
+            print(f"❌ HTML formatında da gönderilemedi: {e2}")
+            # Son çare olarak düz metin olarak gönder
+            await update.message.reply_text(active_text, parse_mode=None)
 
 async def adduser_command(update, context):
     """Kullanıcı ekleme komutu (sadece bot sahibi ve adminler)"""
